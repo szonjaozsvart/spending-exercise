@@ -10,18 +10,27 @@ import {
   Amount,
   AmountWrapper,
 } from "../styles/ComponentStyles";
+import { ImCross } from "react-icons/im";
+import { HiOutlinePencil } from "react-icons/hi";
 
-export default function SpendingList({ spendings, setSpendings }) {
+export default function SpendingList({
+  spendings,
+  setSpendings,
+  currencyBy,
+  sortBy,
+}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:5000/spendings`, {
+    console.log(sortBy, currencyBy);
+    fetch(`/spendings?currency=${currencyBy}&order=${sortBy}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {
+        console.log("visszajön");
         const body = await res.json();
         return {
           status: res.status,
@@ -40,7 +49,7 @@ export default function SpendingList({ spendings, setSpendings }) {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [currencyBy, sortBy]);
 
   if (loading) return <Loader />;
 
@@ -79,6 +88,16 @@ export default function SpendingList({ spendings, setSpendings }) {
                 {(spending.amount / 100).toFixed(2)}
               </Amount>
             </AmountWrapper>
+            <div className="update">
+              <button className="update-btn">
+                <HiOutlinePencil />
+              </button>
+            </div>
+            <div className="delete">
+              <button className="del-btn">
+                <ImCross />
+              </button>
+            </div>
           </Spending>
         ))}
     </>
