@@ -12,7 +12,6 @@ export default function Form() {
   });
 
   const handleSubmit = async (e) => {
-    console.log("YEP, belép a post handleSubmitbe");
     e.preventDefault();
     const response = await fetch("/spendings", {
       method: "POST",
@@ -24,14 +23,11 @@ export default function Form() {
       }),
     });
     if (response.status !== 200) {
-      console.log(response);
-      console.log("hiba történt");
       setError(true);
       return;
     }
     const body = await response.json();
     setError(false);
-    console.log(response);
     window.location.reload();
     setState({
       description: "",

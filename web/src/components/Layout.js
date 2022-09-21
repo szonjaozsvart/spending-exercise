@@ -1,6 +1,6 @@
-import React from 'react';
-import Header from './Header';
-import { MainContainer } from '../styles/ComponentStyles';
+import React from "react";
+import Header from "./Header";
+import { MainContainer } from "../styles/ComponentStyles";
 
 const Layout = ({ children }) => (
   <>

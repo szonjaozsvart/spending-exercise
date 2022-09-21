@@ -1,22 +1,40 @@
 import unittest
-from urllib import request
-import app
+from unittest.mock import MagicMock, patch
+from app import get_spendings
 
 
-class TestApp(unittest.TestCase):
-    # name start with 'test_'
-    MOCK_OBJ = [{
-        "id": "1",
-        "description": "Pumpkin",
-        "amount" : 179000,
+class TestGetSpendings(unittest.TestCase):
+
+    @patch('app.request')
+    def test_get_spendings(self, mock_get_spendings):
+        
+        # mock_results = MagicMock()
+        mock_get_spendings.return_value.json.return_value = {"data":[
+        {
+        "amount": 1500000,
         "currency": "HUF",
-        "spent_at": "2022-02-23T14:47:20.381Z"
-    },]
+        "description": "Bérlet",
+        "id": 17,
+        "spent_at": "2022-09-21T13:24:20"
+    }]}
+        mock_get_spendings.get.return_value = mock_get_spendings
+        self.assertEqual(get_spendings(), mock_get_spendings.json()['data'][0]['description'],'Coffee')
+        
     
-    def test_get_spendings(self):
-        API_URL = "http://localhost:3000/spendings"
-        r = request.get(TestApp.API_URL)
-        self.assertEqual(r.status_code,200)
+    @patch('app.request')
+    def test_fail_get_spendings(self, mock_request):
+        
+        mock_results = MagicMock(status_code=400)
+        mock_results.json.return_value = {"data":[
+        {
+        "amount": 1500000,
+        "currency": "HUF",
+        "description": "Bérlet",
+        "id": 17,
+        "spent_at": "2022-09-21T13:24:20"
+    }]}
+        mock_request.get.return_value = mock_results
+        self.assertEqual(get_spendings(), "Not accepted form!")
         
         
 if __name__ == '__main__':

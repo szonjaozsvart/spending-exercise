@@ -24,13 +24,11 @@ export default function SpendingList({
 
   useEffect(() => {
     setLoading(true);
-    console.log(sortBy, currencyBy);
     fetch(`/spendings?currency=${currencyBy}&order=${sortBy}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {
-        console.log("visszajön");
         const body = await res.json();
         return {
           status: res.status,
@@ -43,7 +41,6 @@ export default function SpendingList({
         }
       })
       .catch((err) => {
-        console.error(err);
         setError(true);
       })
       .finally(() => {

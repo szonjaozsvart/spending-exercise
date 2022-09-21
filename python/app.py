@@ -1,61 +1,12 @@
-from email.policy import default
-
-# from typing_extensions import Required
-from flask import Flask, abort, jsonify, request
-
-# from flask_sqlalchemy import SQLAlchemy
-# from flask_marshmallow import Marshmallow
-from flask_cors import CORS
-
-# from datetime import datetime
+from flask import abort, jsonify, request
 from config import Items, items_schema, item_schema, db, app
-
-# app = Flask(__name__)
-# CORS(app)
-
-# app.config[
-#     "SQLALCHEMY_DATABASE_URI"
-# ] = "mysql://szonja:tollTarto_2022@localhost/playing_around"
-# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-# db = SQLAlchemy(app)
-# ma = Marshmallow(app)
-
-
-# class Items(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     description = db.Column(db.String(100))
-#     amount = db.Column(db.Integer)
-#     currency = db.Column(db.String(100))
-#     spent_at = db.Column(db.DateTime, default=datetime.now())
-
-#     def __init__(self, description, amount, currency):
-#         self.description = description
-#         self.amount = amount
-#         self.currency = currency
-
-
-# class ItemSchema(ma.Schema):
-#     class Meta:
-#         fields = ("id", "description", "amount", "currency", "spent_at")
-
-
-# item_schema = ItemSchema()
-# items_schema = ItemSchema(many=True)
 
 
 @app.route("/spendings", methods=["GET"])
 def get_spendings():
-    print("GET spending")
-
+    all_items = Items.query.order_by(Items.id.desc())
     order = request.args.get("order")
-    dateD = "-date"
-    dateA = "date"
-    amountD = "-amount_in_huf"
-    amountA = "amount_in_huf"
-    if not dateD or not dateA or not amountD or not amountA:
-        return abort(404, "Not accepted form!")
-    elif order == "-date":
+    if order == "-date":
         all_items = Items.query.order_by(Items.spent_at.desc())
     elif order == "-amount_in_huf":
         all_items = Items.query.order_by(Items.amount.desc())
@@ -65,32 +16,29 @@ def get_spendings():
         all_items = Items.query.order_by(Items.spent_at.asc())
 
     currency = request.args.get("currency")
-    usdC = "USD"
-    hufC = "HUF"
-    allIn = "ALL"
-    if not usdC or not hufC or not allIn:
-        return abort(404, "Not accepted currency!")
-    if currency == "USD":
+    if currency == "ALL":
+        all_items = all_items.filter(Items.id > 0)
+    elif currency == "USD":
         all_items = all_items.filter(Items.currency == "USD")
     elif currency == "HUF":
         all_items = all_items.filter(Items.currency == "HUF")
-
     results = items_schema.dump(all_items)
     return jsonify(results)
 
 
 @app.route("/spendings", methods=["POST"])
 def post_spendings():
-    print("POST spending")
     description = request.json["description"]
     amount = request.json["amount"]
     currency = request.json["currency"]
+    usd = "USD"
+    huf = "HUF"
     if not description or not amount:
         return abort(404, "You have to provide a 'description' and 'amount'!")
-    else:
+    elif currency == usd or currency == huf:
         items = Items(description, amount, currency)
-        # add items to the db
         db.session.add(items)
-        # commit db
         db.session.commit()
         return item_schema.jsonify(items)
+    else:
+        return abort(403, "Not accepted currency!")

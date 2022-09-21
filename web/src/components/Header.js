@@ -1,6 +1,5 @@
-import React from 'react';
-import { HeaderStyles, FlexWrapper } from '../styles/ComponentStyles';
-
+import React from "react";
+import { HeaderStyles, FlexWrapper } from "../styles/ComponentStyles";
 
 export default function Header() {
   return (
