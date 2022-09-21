@@ -1,43 +1,47 @@
 from email.policy import default
-from typing_extensions import Required
+
+# from typing_extensions import Required
 from flask import Flask, abort, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
+
+# from flask_sqlalchemy import SQLAlchemy
+# from flask_marshmallow import Marshmallow
 from flask_cors import CORS
-from datetime import datetime
 
-app = Flask(__name__)
-CORS(app)
+# from datetime import datetime
+from config import Items, items_schema, item_schema, db, app
 
-app.config[
-    "SQLALCHEMY_DATABASE_URI"
-] = "mysql://szonja:tollTarto_2022@localhost/playing_around"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# app = Flask(__name__)
+# CORS(app)
 
-db = SQLAlchemy(app)
-ma = Marshmallow(app)
+# app.config[
+#     "SQLALCHEMY_DATABASE_URI"
+# ] = "mysql://szonja:tollTarto_2022@localhost/playing_around"
+# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-
-class Items(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    description = db.Column(db.String(100))
-    amount = db.Column(db.Integer)
-    currency = db.Column(db.String(100))
-    spent_at = db.Column(db.DateTime, default=datetime.now())
-
-    def __init__(self, description, amount, currency):
-        self.description = description
-        self.amount = amount
-        self.currency = currency
+# db = SQLAlchemy(app)
+# ma = Marshmallow(app)
 
 
-class ItemSchema(ma.Schema):
-    class Meta:
-        fields = ("id", "description", "amount", "currency", "spent_at")
+# class Items(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     description = db.Column(db.String(100))
+#     amount = db.Column(db.Integer)
+#     currency = db.Column(db.String(100))
+#     spent_at = db.Column(db.DateTime, default=datetime.now())
+
+#     def __init__(self, description, amount, currency):
+#         self.description = description
+#         self.amount = amount
+#         self.currency = currency
 
 
-item_schema = ItemSchema()
-items_schema = ItemSchema(many=True)
+# class ItemSchema(ma.Schema):
+#     class Meta:
+#         fields = ("id", "description", "amount", "currency", "spent_at")
+
+
+# item_schema = ItemSchema()
+# items_schema = ItemSchema(many=True)
 
 
 @app.route("/spendings", methods=["GET"])
@@ -45,7 +49,13 @@ def get_spendings():
     print("GET spending")
 
     order = request.args.get("order")
-    if order == "-date":
+    dateD = "-date"
+    dateA = "date"
+    amountD = "-amount_in_huf"
+    amountA = "amount_in_huf"
+    if not dateD or not dateA or not amountD or not amountA:
+        return abort(404, "Not accepted form!")
+    elif order == "-date":
         all_items = Items.query.order_by(Items.spent_at.desc())
     elif order == "-amount_in_huf":
         all_items = Items.query.order_by(Items.amount.desc())
@@ -55,6 +65,11 @@ def get_spendings():
         all_items = Items.query.order_by(Items.spent_at.asc())
 
     currency = request.args.get("currency")
+    usdC = "USD"
+    hufC = "HUF"
+    allIn = "ALL"
+    if not usdC or not hufC or not allIn:
+        return abort(404, "Not accepted currency!")
     if currency == "USD":
         all_items = all_items.filter(Items.currency == "USD")
     elif currency == "HUF":
