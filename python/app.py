@@ -4,8 +4,15 @@ from config import Items, items_schema, item_schema, db, app
 
 @app.route("/spendings", methods=["GET"])
 def get_spendings():
-    all_items = Items.query.order_by(Items.id.desc())
     order = request.args.get("order")
+    currency = request.args.get("currency")
+
+    if currency not in ["ALL", "USD", "HUF"]:
+        return abort(403, "Not accepted currency!")
+
+    if order not in ["date", "-date", "amount_in_huf", "-amount_in_huf"]:
+        return abort(403, "Not accepted order!")
+
     if order == "-date":
         all_items = Items.query.order_by(Items.spent_at.desc())
     elif order == "-amount_in_huf":
@@ -15,10 +22,7 @@ def get_spendings():
     elif order == "date":
         all_items = Items.query.order_by(Items.spent_at.asc())
 
-    currency = request.args.get("currency")
-    if currency == "ALL":
-        all_items = all_items.filter(Items.id > 0)
-    elif currency == "USD":
+    if currency == "USD":
         all_items = all_items.filter(Items.currency == "USD")
     elif currency == "HUF":
         all_items = all_items.filter(Items.currency == "HUF")
@@ -28,17 +32,21 @@ def get_spendings():
 
 @app.route("/spendings", methods=["POST"])
 def post_spendings():
-    description = request.json["description"]
-    amount = request.json["amount"]
-    currency = request.json["currency"]
-    usd = "USD"
-    huf = "HUF"
-    if not description or not amount:
-        return abort(404, "You have to provide a 'description' and 'amount'!")
-    elif currency == usd or currency == huf:
-        items = Items(description, amount, currency)
-        db.session.add(items)
-        db.session.commit()
-        return item_schema.jsonify(items)
-    else:
+    content = request.get_json(silent=True)
+    if (
+        "description" not in content
+        or "amount" not in content
+        or "currency" not in content
+    ):
+        return abort(404, "You have to provide correct information!")
+
+    if content["currency"] not in ["USD", "HUF"]:
         return abort(403, "Not accepted currency!")
+
+    if not content["description"] or not content["amount"] or not content["currency"]:
+        return abort(404, "Input information is not correct!")
+
+    items = Items(content["description"], content["amount"], content["currency"])
+    db.session.add(items)
+    db.session.commit()
+    return item_schema.jsonify(items)
